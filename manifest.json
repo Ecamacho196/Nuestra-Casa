@@ -1,0 +1,9 @@
+{
+  "name": "Nuestra Casa - Organización",
+  "short_name": "Nuestra Casa",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAF6FB",
+  "theme_color": "#5B4470",
+  "icons": []
+}
