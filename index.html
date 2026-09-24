@@ -269,12 +269,22 @@
   .nc-metodo-row:last-child{border-bottom:none;}
   .nc-metodo-detail{font-size:12.5px;color:var(--ink-soft);}
   .nc-settle-box{background:var(--sage-dim);border:1px solid var(--sage);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+  .nc-ingresos-box{background:var(--gold-dim);border:1px solid var(--gold);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
   .nc-settle-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .nc-settle-row:last-child{border-bottom:none;}
   .nc-whoami-banner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--gold-dim);border:1px solid var(--gold);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:13px;}
   .nc-quicknav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
   .nc-alert-banner{background:var(--coral-dim);border:1px solid var(--coral);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
   .nc-alert-title{font-size:13px;font-weight:600;color:var(--coral);margin:0 0 8px;}
+  .nc-global-alert-overlay{display:none;position:fixed;inset:0;background:rgba(51,43,61,.55);z-index:9999;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
+  .nc-global-alert-overlay.show{display:flex;}
+  .nc-global-alert-modal{background:var(--paper);border:1px solid var(--coral);border-radius:18px;padding:20px;max-width:440px;width:100%;margin-top:48px;box-shadow:0 12px 40px rgba(51,43,61,.35);}
+  .nc-global-alert-modal h3{margin:0 0 6px;color:var(--coral);font-size:17px;}
+  .nc-global-alert-modal p.nc-ga-sub{margin:0 0 12px;font-size:13px;color:var(--ink-soft);}
+  .nc-global-alert-list{max-height:45vh;overflow-y:auto;margin-bottom:14px;}
+  .nc-global-alert-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .nc-global-alert-actions button{flex:1;}
+  .nc-ga-dismiss{background:transparent;border:1px solid var(--line);color:var(--ink-soft);border-radius:10px;padding:10px;font-weight:600;cursor:pointer;}
   .nc-rec-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .nc-rec-row:last-child{border-bottom:none;}
   .nc-rec-monto{width:100px;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;}
@@ -356,6 +366,9 @@
 </script>
 
 <div id="nc-root">
+  <div class="nc-global-alert-overlay" id="nc-global-alert-overlay">
+    <div class="nc-global-alert-modal" id="nc-global-alert-modal"></div>
+  </div>
   <div class="nc-header">
     <div class="nc-love-counter" id="nc-love-counter"></div>
     <p class="nc-eyebrow">Casa de San Carlos 🏡</p>
@@ -408,7 +421,17 @@
   const PERSONAS = ['Exequiel','Maru','Ambos'];
   const METODOS = ['Efectivo','Débito','Transferencia','Crédito'];
   const NORM_CATEGORIES = ['Económico','Tareas del hogar','Comunicación','Espacio y tiempo propio','Visitas y familia','Otro'];
-  const FRECUENCIAS = ['Única vez','Diaria','Semanal','Mensual'];
+  const FRECUENCIAS = ['Única vez','Diaria','Semanal','Mensual','Anual'];
+  function advanceFechaByFrecuencia(fechaIso, frecuencia){
+    if(!fechaIso) return fechaIso;
+    const d = new Date(fechaIso+'T00:00:00');
+    if(frecuencia==='Diaria') d.setDate(d.getDate()+1);
+    else if(frecuencia==='Semanal') d.setDate(d.getDate()+7);
+    else if(frecuencia==='Mensual') d.setMonth(d.getMonth()+1);
+    else if(frecuencia==='Anual') d.setFullYear(d.getFullYear()+1);
+    else return fechaIso;
+    return d.toISOString().slice(0,10);
+  }
   const TIPOS_RECORDATORIO = ['Médico','Trámite','Cumpleaños / familia','Aniversario','Otro'];
   const ESTADOS_PROYECTO = ['Por empezar','En curso','Pausado','Terminado'];
   const DOW = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -465,12 +488,14 @@
   let recuerdos = [];
   let gastosRecurrentes = [];
   let ajustesSaldo = [];
+  let ingresos = {Exequiel:0, Maru:0};
   let fondosPorTab = {};
   let photoCache = {};
 
   let listaFilter = 'todos';
   let finFilters = {cat:'', persona:'', metodo:'', discutido:'', q:''};
   let tareasFilter = {estado:'todas', asignado:''};
+  let fechasFilter = {estado:'todas'};
   let editingGastoId = null, editingTaskId = null, editingRemId = null;
   let linkingTaskId = null;
   let calState = { year:new Date().getFullYear(), month:new Date().getMonth(), selected:null };
@@ -498,13 +523,24 @@
     const n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   }
+  function getProporcionSplit(){
+    const ex = Number(ingresos.Exequiel)||0;
+    const mr = Number(ingresos.Maru)||0;
+    const total = ex+mr;
+    if(total<=0) return {ex:0.5, mr:0.5};
+    return {ex: ex/total, mr: mr/total};
+  }
   function getContribution(g){
     const m = Number(g.monto)||0;
     if(g.quien==='Exequiel') return {ex:m, mr:0};
     if(g.quien==='Maru') return {ex:0, mr:m};
     if(g.quien==='Ambos'){
-      const ex = (g.splitExequiel!=null && g.splitExequiel!=='') ? Number(g.splitExequiel) : m/2;
-      return {ex, mr: m-ex};
+      if(g.splitExequiel!=null && g.splitExequiel!==''){
+        const ex = Number(g.splitExequiel);
+        return {ex, mr: m-ex};
+      }
+      const prop = getProporcionSplit();
+      return {ex: m*prop.ex, mr: m*prop.mr};
     }
     return {ex:0, mr:0};
   }
@@ -516,13 +552,13 @@
     const in3 = d.toISOString().slice(0,10);
     const items = [];
     recordatorios.forEach(r=>{
-      if(!r.fecha) return;
-      if(r.fecha < today) items.push({texto:r.texto, fecha:r.fecha, estado:'vencido', tipo:'Fecha importante'});
-      else if(r.fecha <= in3) items.push({texto:r.texto, fecha:r.fecha, estado:'proximo', tipo:'Fecha importante'});
+      if(!r.fecha || r.hecho) return;
+      if(r.fecha < today) items.push({texto:r.texto, fecha:r.fecha, estado:'vencido', tipo:'Fecha importante', id:r.id, kind:'fecha'});
+      else if(r.fecha <= in3) items.push({texto:r.texto, fecha:r.fecha, estado:'proximo', tipo:'Fecha importante', id:r.id, kind:'fecha'});
     });
     tareas.filter(t=>!t.hecho && t.fecha).forEach(t=>{
-      if(t.fecha < today) items.push({texto:t.texto, fecha:t.fecha, estado:'vencido', tipo:'Tarea'});
-      else if(t.fecha <= in3) items.push({texto:t.texto, fecha:t.fecha, estado:'proximo', tipo:'Tarea'});
+      if(t.fecha < today) items.push({texto:t.texto, fecha:t.fecha, estado:'vencido', tipo:'Tarea', id:t.id, kind:'tarea'});
+      else if(t.fecha <= in3) items.push({texto:t.texto, fecha:t.fecha, estado:'proximo', tipo:'Tarea', id:t.id, kind:'tarea'});
     });
     return items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
   }
@@ -678,8 +714,45 @@
     recuerdos = await loadKey('recuerdos-list', []);
     gastosRecurrentes = await loadKey('gastos-recurrentes', []);
     ajustesSaldo = await loadKey('finanzas-ajustes', []);
+    ingresos = await loadKey('finanzas-ingresos', {Exequiel:0, Maru:0});
     fondosPorTab = await loadKey('fondos-tabs', {});
     renderAll();
+    showGlobalAlertIfNeeded();
+  }
+
+  function showGlobalAlertIfNeeded(){
+    const urgentes = getPendientesUrgentes();
+    const overlay = document.getElementById('nc-global-alert-overlay');
+    const modal = document.getElementById('nc-global-alert-modal');
+    if(!overlay || !modal) return;
+    if(!urgentes.length || sessionStorage.getItem('nc-alert-dismissed')==='1'){
+      overlay.classList.remove('show');
+      return;
+    }
+    const vencidos = urgentes.filter(u=>u.estado==='vencido').length;
+    const proximos = urgentes.length - vencidos;
+    modal.innerHTML = `
+      <h3>⚠️ Tenés ${urgentes.length} cosa${urgentes.length===1?'':'s'} pendiente${urgentes.length===1?'':'s'}</h3>
+      <p class="nc-ga-sub">${vencidos ? vencidos+' vencida'+(vencidos===1?'':'s') : ''}${vencidos && proximos ? ' y ' : ''}${proximos ? proximos+' próxima'+(proximos===1?'':'s') : ''} — revisalas antes que cualquier otra cosa.</p>
+      <div class="nc-global-alert-list">
+        ${urgentes.slice(0,8).map(u=>`<div class="nc-mini-row"><span>${escapeHtml(u.texto)} <span class="nc-tag ${u.estado==='vencido'?'nc-tag-unilateral':'nc-tag-cat'}">${escapeHtml(u.tipo)}${u.estado==='vencido'?' · Vencido':' · Próximo'}</span></span><span>${fmtDate(u.fecha)}</span></div>`).join('')}
+      </div>
+      <div class="nc-global-alert-actions">
+        <button class="nc-add-btn" id="nc-ga-goto">Ir a revisar</button>
+        <button class="nc-ga-dismiss" id="nc-ga-dismiss">Ahora no</button>
+      </div>
+    `;
+    overlay.classList.add('show');
+    document.getElementById('nc-ga-goto').addEventListener('click', ()=>{
+      overlay.classList.remove('show');
+      sessionStorage.setItem('nc-alert-dismissed','1');
+      const first = urgentes[0];
+      activateTab(first && first.kind==='fecha' ? 'fechas' : 'tareas');
+    });
+    document.getElementById('nc-ga-dismiss').addEventListener('click', ()=>{
+      overlay.classList.remove('show');
+      sessionStorage.setItem('nc-alert-dismissed','1');
+    });
   }
 
   function renderAll(){
@@ -820,7 +893,7 @@
     const events = {};
     function add(dateIso, item){ if(!dateIso) return; if(!events[dateIso]) events[dateIso]=[]; events[dateIso].push(item); }
     tareas.filter(t=>t.fecha).forEach(t=>add(t.fecha, {tipo:'tarea', texto:t.texto, color: t.hecho ? '#7C9B6F' : '#8B6FB3', id:t.id, hecho:!!t.hecho}));
-    recordatorios.forEach(r=>{ if(r.fecha) add(r.fecha, {tipo:'fecha', texto:r.texto, color:'#D98B96'}); });
+    recordatorios.forEach(r=>{ if(r.fecha) add(r.fecha, {tipo:'fecha', texto:r.texto, color: r.hecho ? '#7C9B6F' : '#D98B96', id:r.id, hecho:!!r.hecho, recurrente:!!r.recurrente, frecuencia:r.frecuencia}); });
     proyectos.forEach(p=>{ if(p.fechaObjetivo) add(p.fechaObjetivo, {tipo:'proyecto', texto:p.titulo, color:'#D9A544'}); });
     return events;
   }
@@ -862,7 +935,14 @@
                 <span class="nc-tag nc-tag-cat">Tarea</span>
               </div>`;
             }
-            return `<div class="nc-mini-row"><span>${escapeHtml(e.texto)}</span><span class="nc-tag nc-tag-cat">${e.tipo==='fecha'?'Fecha importante':'Proyecto'}</span></div>`;
+            if(e.tipo==='fecha'){
+              return `<div class="nc-task-row" style="padding:6px 0;">
+                <button class="nc-checkbox ${e.hecho?'checked':''}" data-calrid="${e.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+                <span class="nc-task-text ${e.hecho?'done':''}" style="flex:1;">${escapeHtml(e.texto)}</span>
+                <span class="nc-tag nc-tag-cat">Fecha importante</span>
+              </div>`;
+            }
+            return `<div class="nc-mini-row"><span>${escapeHtml(e.texto)}</span><span class="nc-tag nc-tag-cat">Proyecto</span></div>`;
           }).join('') : '<p class="nc-empty">Nada agendado este día.</p>'}
         </div>
       `;
@@ -878,7 +958,8 @@
       <div class="nc-legend">
         <span><i style="background:#8B6FB3"></i> Tareas pendientes</span>
         <span><i style="background:#7C9B6F"></i> Tareas cumplidas</span>
-        <span><i style="background:#D98B96"></i> Fechas importantes</span>
+        <span><i style="background:#D98B96"></i> Fechas pendientes</span>
+        <span><i style="background:#7C9B6F"></i> Fechas cumplidas</span>
         <span><i style="background:#D9A544"></i> Proyectos</span>
       </div>
       <div class="nc-cal-grid">
@@ -905,6 +986,23 @@
       renderCalendario(); renderTareas(); renderResumen();
       saveKey('tareas-list', tareas);
     }));
+    panel.querySelectorAll('[data-calrid]').forEach(btn=>btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      toggleRecordatorioHecho(btn.getAttribute('data-calrid'));
+      renderCalendario(); renderFechas(); renderResumen();
+    }));
+  }
+  function toggleRecordatorioHecho(id){
+    const r = recordatorios.find(x=>x.id===id);
+    if(!r) return;
+    if(r.recurrente && r.frecuencia && r.frecuencia!=='Única vez'){
+      r.ultimoCompletado = r.fecha || todayIso();
+      r.fecha = advanceFechaByFrecuencia(r.fecha || todayIso(), r.frecuencia);
+      r.hecho = false;
+    } else {
+      r.hecho = !r.hecho;
+    }
+    saveKey('recordatorios-list', recordatorios);
   }
 
   // ---------------- CATEGORY MANAGER (reusable) ----------------
@@ -1118,6 +1216,20 @@
     html += renderBalanceHtml(gastosCombinados);
     html += renderBalancePorMetodo(gastosCombinados);
 
+    const propActual = getProporcionSplit();
+    html += `
+      <div class="nc-ingresos-box">
+        <p class="nc-form-title">📊 Ingresos aproximados (para repartir gastos de forma proporcional)</p>
+        <p class="nc-card-note">Si los cargan, cuando el gasto sea "Ambos" y no pongan un monto específico para cada uno, se reparte según esta proporción en vez de 50/50 — y siempre pueden ajustarlo a mano en cada gasto.</p>
+        <div class="nc-form-grid" style="margin-top:8px;">
+          <input id="ning-exequiel" type="text" inputmode="decimal" placeholder="Ingreso aprox. de Exequiel $" value="${ingresos.Exequiel?ingresos.Exequiel:''}">
+          <input id="ning-maru" type="text" inputmode="decimal" placeholder="Ingreso aprox. de Maru $" value="${ingresos.Maru?ingresos.Maru:''}">
+        </div>
+        <p class="nc-card-note" style="margin-top:6px;">Reparto actual: Exequiel ${Math.round(propActual.ex*100)}% · Maru ${Math.round(propActual.mr*100)}%${(!ingresos.Exequiel && !ingresos.Maru)?' (sin ingresos cargados, se usa 50/50)':''}</p>
+        <button class="nc-add-btn" id="ning-save-btn">Guardar ingresos</button>
+      </div>
+    `;
+
     html += `
       <div class="nc-settle-box">
         <p class="nc-form-title">🤝 Saldar cuentas</p>
@@ -1214,7 +1326,7 @@
           <input id="ng-cuotas" type="number" placeholder="Cuotas (si es crédito)" value="${editing&&editing.cuotas?editing.cuotas:''}">
           <select id="ng-discutido"><option value="si" ${!editing||editing.discutido==='si'?'selected':''}>Discutido en pareja</option><option value="no" ${editing&&editing.discutido==='no'?'selected':''}>Decisión unilateral</option></select>
           <div class="nc-full" id="ng-split-wrap" style="display:${(editing?editing.quien==='Ambos':true)?'block':'none'};">
-            <input id="ng-split" type="text" inputmode="decimal" placeholder="¿Cuánto puso Exequiel? (el resto es de Maru)" value="${editing&&editing.splitExequiel!=null?editing.splitExequiel:''}">
+            <input id="ng-split" type="text" inputmode="decimal" placeholder="¿Cuánto puso Exequiel? (vacío = reparto ${Math.round(getProporcionSplit().ex*100)}%/${Math.round(getProporcionSplit().mr*100)}% según ingresos)" value="${editing&&editing.splitExequiel!=null?editing.splitExequiel:''}">
           </div>
           <textarea class="nc-full" id="ng-nota" placeholder="Nota (opcional)">${editing?escapeHtml(editing.nota||''):''}</textarea>
         </div>
@@ -1305,6 +1417,16 @@
       });
       renderFinanzas(); renderResumen();
       saveKey('finanzas-ajustes', ajustesSaldo);
+    });
+
+    document.getElementById('ning-save-btn').addEventListener('click', ()=>{
+      ingresos = {
+        Exequiel: parseMonto(document.getElementById('ning-exequiel').value),
+        Maru: parseMonto(document.getElementById('ning-maru').value)
+      };
+      renderFinanzas(); renderResumen();
+      saveKey('finanzas-ingresos', ingresos);
+      showStatus('Ingresos guardados — desde ahora el reparto sugerido usa esta proporción');
     });
 
     ['ff-cat','ff-persona','ff-metodo','ff-discutido'].forEach(id=>{
@@ -1658,21 +1780,33 @@
   // ---------------- FECHAS IMPORTANTES ----------------
   function renderFechas(){
     const panel = document.getElementById('content-fechas');
-    const list = recordatorios.slice().sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    let list = recordatorios.slice().sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+    if(fechasFilter.estado==='pendientes') list = list.filter(r=>!r.hecho);
+    else if(fechasFilter.estado==='cumplidas') list = list.filter(r=>r.hecho);
     let html = renderBgPicker('fechas');
-    if(!list.length) html += `<p class="nc-empty">No hay fechas importantes todavía — turnos médicos, trámites, cumpleaños, aniversarios...</p>`;
+    html += `
+      <div class="nc-filter-row">
+        <button class="nc-chip-btn ${fechasFilter.estado==='todas'?'active':''}" data-ff-estado="todas">Todas</button>
+        <button class="nc-chip-btn ${fechasFilter.estado==='pendientes'?'active':''}" data-ff-estado="pendientes">Pendientes</button>
+        <button class="nc-chip-btn ${fechasFilter.estado==='cumplidas'?'active':''}" data-ff-estado="cumplidas">Cumplidas</button>
+      </div>
+    `;
+    if(!list.length) html += `<p class="nc-empty">No hay fechas importantes en este filtro.</p>`;
     list.forEach(r=>{
-      const overdue = r.fecha && r.fecha < todayIso();
+      const overdue = r.fecha && r.fecha < todayIso() && !r.hecho;
+      const esRecurrenteConFrecuencia = r.recurrente && r.frecuencia && r.frecuencia!=='Única vez';
       html += `
         <div class="nc-rem-row ${overdue?'overdue':''}">
-          <div>
+          <button class="nc-checkbox ${r.hecho?'checked':''}" data-ridcheck="${r.id}" title="${esRecurrenteConFrecuencia?'Marcar cumplida y pasar a la próxima':'Marcar como cumplida'}"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+          <div style="flex:1;">
             <div class="nc-expense-meta" style="margin-bottom:6px;">
               <span class="nc-tag nc-tag-cat">${escapeHtml(r.tipo)}</span>
               <span class="nc-tag ${personaTagClass(r.persona)}">${escapeHtml(r.persona)}</span>
               ${r.recurrente ? `<span class="nc-tag nc-tag-cat">${escapeHtml(r.frecuencia||'Recurrente')}</span>` : ''}
             </div>
-            <div>${escapeHtml(r.texto)}</div>
+            <div class="nc-task-text ${r.hecho?'done':''}">${escapeHtml(r.texto)}</div>
             ${r.nota ? `<div class="nc-card-note">${escapeHtml(r.nota)}</div>` : ''}
+            ${r.ultimoCompletado ? `<div class="nc-card-note">Última vez cumplida: ${fmtDate(r.ultimoCompletado)}</div>` : ''}
           </div>
           <div style="text-align:right;">
             <div class="nc-rem-date ${overdue?'overdue':''}">${r.fecha?fmtDate(r.fecha):'sin fecha'}</div>
@@ -1711,6 +1845,11 @@
       const r = recordatorios.find(x=>x.id===btn.getAttribute('data-icsr'));
       if(r) downloadIcs(r);
     }));
+    panel.querySelectorAll('[data-ff-estado]').forEach(b=>b.addEventListener('click', ()=>{ fechasFilter.estado = b.getAttribute('data-ff-estado'); renderFechas(); }));
+    panel.querySelectorAll('[data-ridcheck]').forEach(btn=>btn.addEventListener('click', ()=>{
+      toggleRecordatorioHecho(btn.getAttribute('data-ridcheck'));
+      renderFechas(); renderResumen(); renderCalendario();
+    }));
     panel.querySelectorAll('[data-editr]').forEach(btn=>btn.addEventListener('click', ()=>{
       editingRemId = btn.getAttribute('data-editr'); renderFechas();
     }));
@@ -1736,7 +1875,7 @@
         if(idx!==-1) recordatorios[idx] = Object.assign({}, recordatorios[idx], data);
         editingRemId = null;
       } else {
-        recordatorios.push(Object.assign({id:genId()}, data));
+        recordatorios.push(Object.assign({id:genId(), hecho:false}, data));
       }
       renderFechas(); renderResumen(); renderCalendario(); saveKey('recordatorios-list', recordatorios);
     });
@@ -1970,7 +2109,7 @@
 
 <script>
 (function(){
-  const BACKUP_KEYS = ['checklist-state','checklist-custom','checklist-cats','checklist-purchases','finanzas-gastos','finanzas-cats','gastos-recurrentes','finanzas-ajustes','tareas-list','recordatorios-list','proyectos-list','convivencia-normas','recuerdos-list','fondos-tabs'];
+  const BACKUP_KEYS = ['checklist-state','checklist-custom','checklist-cats','checklist-purchases','finanzas-gastos','finanzas-cats','gastos-recurrentes','finanzas-ajustes','finanzas-ingresos','tareas-list','recordatorios-list','proyectos-list','convivencia-normas','recuerdos-list','fondos-tabs'];
 
   const btn = document.getElementById('nc-backup-btn');
   if(btn){
