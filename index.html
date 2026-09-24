@@ -34,6 +34,8 @@
     --line:#E4D8ED;
     --white:#FFFDFB;
     --shadow:0 2px 10px rgba(139,111,179,.12);
+    --panel-scrim:rgba(255,253,251,.72);
+    --panel-scrim-photo:rgba(255,253,251,.30);
   }
   *{box-sizing:border-box;}
   #nc-root{
@@ -59,8 +61,9 @@
   .nc-panel{display:none;position:relative;border-radius:22px;overflow:hidden;isolation:isolate;}
   .nc-panel.active{display:block;}
   .nc-panel-bg{position:absolute;inset:-26px;background-size:cover;background-position:center;filter:blur(26px) saturate(1.08);opacity:.5;z-index:0;transform:scale(1.12);transition:opacity .3s;}
-  .nc-panel-bg.has-photo{opacity:.55;}
-  .nc-panel-content{position:relative;z-index:1;background:rgba(255,253,251,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:20px;padding:16px 14px 18px;}
+  .nc-panel-bg.has-photo{opacity:.85;}
+  .nc-panel-content{position:relative;z-index:1;background:var(--panel-scrim);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:20px;padding:16px 14px 18px;transition:background .3s;}
+  .nc-panel-content.has-bg-photo{background:var(--panel-scrim-photo);}
 
   .bg-resumen{background:radial-gradient(circle at 15% 20%, var(--lilac-dim), transparent 55%), radial-gradient(circle at 85% 75%, var(--rose-dim), transparent 55%), var(--paper);}
   .bg-calendario{background:radial-gradient(circle at 80% 15%, var(--rose-dim), transparent 55%), radial-gradient(circle at 15% 80%, var(--gold-dim), transparent 55%), var(--paper);}
@@ -80,6 +83,7 @@
   .nc-card.clickable{cursor:pointer;transition:transform .12s;}
   .nc-card.clickable:hover{transform:translateY(-2px);border-color:var(--lilac);}
   .nc-home-btn{position:fixed;bottom:18px;right:18px;background:var(--lilac-deep);color:var(--white);border:none;border-radius:50%;width:52px;height:52px;font-size:20px;box-shadow:0 4px 14px rgba(91,68,112,.35);cursor:pointer;z-index:50;display:flex;align-items:center;justify-content:center;}
+  .nc-quickadd-btn{right:auto;left:18px;background:var(--sage);}
   .nc-card-label{font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;margin:0 0 6px;}
   .nc-card-value{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0;color:var(--lilac-deep);}
   .nc-card-note{font-size:12.5px;color:var(--ink-soft);margin:4px 0 0;}
@@ -238,8 +242,35 @@
   .nc-mem-foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-faint);padding:4px 10px 10px;}
 
   .nc-status{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:22px;min-height:16px;}
+  .nc-toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:var(--lilac-deep);color:var(--white);padding:10px 20px;border-radius:24px;font-size:13.5px;font-weight:500;box-shadow:0 6px 20px rgba(91,68,112,.35);z-index:100;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;}
+  .nc-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   button{font-family:'Work Sans',sans-serif;}
 
+  .nc-love-counter{
+    background:linear-gradient(135deg, var(--lilac-dim), var(--rose-dim));
+    border:1px solid var(--rose);
+    border-radius:18px;
+    padding:18px 16px;
+    margin:16px 0 4px;
+    text-align:center;
+  }
+  .nc-love-label{font-size:12.5px;color:var(--lilac-deep);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px;}
+  .nc-love-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px;margin-bottom:6px;}
+  .nc-love-unit{display:flex;flex-direction:column;align-items:center;}
+  .nc-love-num{font-family:'Fraunces',serif;font-weight:700;font-size:26px;color:var(--lilac-deep);line-height:1;font-variant-numeric:tabular-nums;}
+  .nc-love-word{font-size:10.5px;color:var(--ink-soft);margin-top:3px;text-transform:uppercase;letter-spacing:.03em;}
+  .nc-love-sub{font-size:12px;color:var(--ink-soft);margin-top:8px;}
+  @media (max-width:420px){
+    .nc-love-num{font-size:21px;}
+    .nc-love-grid{gap:8px 4px;}
+  }
+  .nc-metodo-breakdown{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;box-shadow:var(--shadow);}
+  .nc-metodo-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .nc-metodo-row:last-child{border-bottom:none;}
+  .nc-metodo-detail{font-size:12.5px;color:var(--ink-soft);}
+  .nc-settle-box{background:var(--sage-dim);border:1px solid var(--sage);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+  .nc-settle-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .nc-settle-row:last-child{border-bottom:none;}
   .nc-whoami-banner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--gold-dim);border:1px solid var(--gold);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:13px;}
   .nc-quicknav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
   .nc-alert-banner{background:var(--coral-dim);border:1px solid var(--coral);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
@@ -256,6 +287,8 @@
   .nc-aporte-add input, .nc-aporte-add select{font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;}
 
   #nc-root[data-theme="dark"]{
+    --panel-scrim:rgba(33,28,41,.72);
+    --panel-scrim-photo:rgba(33,28,41,.35);
     --paper:#211C29;
     --paper-dim:#2A2333;
     --ink:#EDE7F3;
@@ -324,6 +357,7 @@
 
 <div id="nc-root">
   <div class="nc-header">
+    <div class="nc-love-counter" id="nc-love-counter"></div>
     <p class="nc-eyebrow">Casa de San Carlos 🏡</p>
     <h1 class="nc-title">Nuestra organización</h1>
     <p class="nc-sub">Mudanza, plata, proyectos, recuerdos y fechas importantes — todo en un solo lugar, siempre editable.</p>
@@ -364,7 +398,9 @@
   <div class="nc-panel" id="nc-panel-normas"><div class="nc-panel-bg bg-normas" id="bg-normas"></div><div class="nc-panel-content" id="content-normas"></div></div>
 
   <button id="nc-home-btn" class="nc-home-btn" title="Volver al inicio" style="display:none;">🏠</button>
+  <button id="nc-quickadd-btn" class="nc-home-btn nc-quickadd-btn" title="Agregar rápido" style="display:none;">➕</button>
   <div class="nc-status" id="nc-status"></div>
+  <div class="nc-toast" id="nc-toast"></div>
 </div>
 
 <script>
@@ -428,6 +464,7 @@
   let norms = [];
   let recuerdos = [];
   let gastosRecurrentes = [];
+  let ajustesSaldo = [];
   let fondosPorTab = {};
   let photoCache = {};
 
@@ -435,6 +472,7 @@
   let finFilters = {cat:'', persona:'', metodo:'', discutido:'', q:''};
   let tareasFilter = {estado:'todas', asignado:''};
   let editingGastoId = null, editingTaskId = null, editingRemId = null;
+  let linkingTaskId = null;
   let calState = { year:new Date().getFullYear(), month:new Date().getMonth(), selected:null };
 
   let saveTimers = {};
@@ -526,7 +564,18 @@
   }
   function fmtDate(iso){ if(!iso) return 'sin fecha'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
   function todayIso(){ return new Date().toISOString().slice(0,10); }
-  function showStatus(msg){ status.textContent = msg; setTimeout(()=>{ if(status.textContent===msg) status.textContent=''; }, 1600); }
+  let toastTimer = null;
+  function showStatus(msg){
+    status.textContent = msg;
+    setTimeout(()=>{ if(status.textContent===msg) status.textContent=''; }, 1600);
+    const toast = document.getElementById('nc-toast');
+    if(toast){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 1800);
+    }
+  }
   function personaTagClass(p){ return p==='Exequiel' ? 'nc-tag-exequiel' : (p==='Maru' ? 'nc-tag-maru' : 'nc-tag-ambos'); }
   function ensureOtro(list){ if(!list.includes('Otro')) list.push('Otro'); return list; }
 
@@ -599,13 +648,20 @@
   async function applyPanelBg(tabKey){
     const bgDiv = document.getElementById('bg-'+tabKey);
     if(!bgDiv) return;
+    const contentDiv = document.getElementById('content-'+tabKey);
     const picked = fondosPorTab[tabKey];
     if(picked){
       const data = await getPhoto(picked);
-      if(data){ bgDiv.style.backgroundImage = `url(${data})`; bgDiv.classList.add('has-photo'); return; }
+      if(data){
+        bgDiv.style.backgroundImage = `url(${data})`;
+        bgDiv.classList.add('has-photo');
+        if(contentDiv) contentDiv.classList.add('has-bg-photo');
+        return;
+      }
     }
     bgDiv.style.backgroundImage = '';
     bgDiv.classList.remove('has-photo');
+    if(contentDiv) contentDiv.classList.remove('has-bg-photo');
   }
 
   async function loadAll(){
@@ -621,6 +677,7 @@
     norms = await loadKey('convivencia-normas', DEFAULT_NORMS);
     recuerdos = await loadKey('recuerdos-list', []);
     gastosRecurrentes = await loadKey('gastos-recurrentes', []);
+    ajustesSaldo = await loadKey('finanzas-ajustes', []);
     fondosPorTab = await loadKey('fondos-tabs', {});
     renderAll();
   }
@@ -710,23 +767,59 @@
 
   function purchasesAsGastos(){ return Object.entries(purchases).map(([id,p])=>({ monto:p.monto, quien:p.quien, splitExequiel:p.splitEx })); }
 
+  function getSettlementAdjustment(){
+    // Positive = reduces how much Maru owes Exequiel (or increases how much Exequiel owes Maru)
+    let adj = 0;
+    ajustesSaldo.forEach(a=>{
+      const m = Number(a.monto)||0;
+      if(a.de==='Maru' && a.para==='Exequiel') adj += m;
+      else if(a.de==='Exequiel' && a.para==='Maru') adj -= m;
+    });
+    return adj;
+  }
   function renderBalanceHtml(list){
     let ex=0, mr=0, total=0;
     list.forEach(g=>{ const c=getContribution(g); total+=c.ex+c.mr; ex+=c.ex; mr+=c.mr; });
-    if(total===0) return `<div class="nc-balance-card"><p class="nc-balance-title">Balance</p><p class="nc-balance-text">Todavía no hay gastos registrados para calcular el balance.</p></div>`;
-    const half = total/2; const diff = ex - half;
+    if(total===0 && !ajustesSaldo.length) return `<div class="nc-balance-card"><p class="nc-balance-title">Balance</p><p class="nc-balance-text">Todavía no hay gastos registrados para calcular el balance.</p></div>`;
+    const half = total/2;
+    const rawDiff = ex - half;
+    const settlementAdj = getSettlementAdjustment();
+    const diff = rawDiff - settlementAdj;
     let text;
-    if(Math.abs(diff) < 1) text = 'Están a la par — cada uno puso la mitad.';
-    else if(diff > 0) text = `Maru le debe a Exequiel <strong>${money(diff)}</strong> para quedar 50/50.`;
-    else text = `Exequiel le debe a Maru <strong>${money(Math.abs(diff))}</strong> para quedar 50/50.`;
-    return `<div class="nc-balance-card"><p class="nc-balance-title">Balance (asumiendo 50/50)</p><p class="nc-balance-text">${text}</p><p class="nc-card-note">Exequiel puso ${money(ex)} · Maru puso ${money(mr)} · Total ${money(total)}</p></div>`;
+    if(Math.abs(diff) < 1) text = 'Están a la par — cada uno puso lo que le corresponde.';
+    else if(diff > 0) text = `Maru le debe a Exequiel <strong>${money(diff)}</strong> para quedar a la par.`;
+    else text = `Exequiel le debe a Maru <strong>${money(Math.abs(diff))}</strong> para quedar a la par.`;
+    const ajusteNote = ajustesSaldo.length ? `<p class="nc-card-note">Ya se registraron ${money(Math.abs(settlementAdj))} en pagos entre ustedes para saldar cuentas.</p>` : '';
+    return `<div class="nc-balance-card"><p class="nc-balance-title">Balance</p><p class="nc-balance-text">${text}</p><p class="nc-card-note">Exequiel puso ${money(ex)} · Maru puso ${money(mr)} · Total gastado ${money(total)}</p>${ajusteNote}</div>`;
+  }
+  function renderBalancePorMetodo(list){
+    const metodos = {};
+    list.forEach(g=>{
+      const met = g.metodo || 'Sin especificar';
+      if(!metodos[met]) metodos[met] = {ex:0, mr:0, total:0};
+      const c = getContribution(g);
+      metodos[met].ex += c.ex; metodos[met].mr += c.mr; metodos[met].total += c.ex + c.mr;
+    });
+    const keys = Object.keys(metodos);
+    if(!keys.length) return '';
+    return `
+      <div class="nc-metodo-breakdown">
+        <p class="nc-form-title">Desglose por método de pago</p>
+        ${keys.map(m=>`
+          <div class="nc-metodo-row">
+            <span class="nc-tag nc-tag-cat">${escapeHtml(m)}</span>
+            <span class="nc-metodo-detail">${money(metodos[m].total)} total · Exequiel ${money(metodos[m].ex)} · Maru ${money(metodos[m].mr)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   // ---------------- CALENDARIO ----------------
   function getEventsForMonth(year, month){
     const events = {};
     function add(dateIso, item){ if(!dateIso) return; if(!events[dateIso]) events[dateIso]=[]; events[dateIso].push(item); }
-    tareas.filter(t=>!t.hecho && t.fecha).forEach(t=>add(t.fecha, {tipo:'tarea', texto:t.texto, color:'#8B6FB3'}));
+    tareas.filter(t=>t.fecha).forEach(t=>add(t.fecha, {tipo:'tarea', texto:t.texto, color: t.hecho ? '#7C9B6F' : '#8B6FB3', id:t.id, hecho:!!t.hecho}));
     recordatorios.forEach(r=>{ if(r.fecha) add(r.fecha, {tipo:'fecha', texto:r.texto, color:'#D98B96'}); });
     proyectos.forEach(p=>{ if(p.fechaObjetivo) add(p.fechaObjetivo, {tipo:'proyecto', texto:p.titulo, color:'#D9A544'}); });
     return events;
@@ -761,7 +854,16 @@
       detailHtml = `
         <div class="nc-cal-detail">
           <h4>${fmtDate(calState.selected)}</h4>
-          ${evs.length ? evs.map(e=>`<div class="nc-mini-row"><span>${escapeHtml(e.texto)}</span><span class="nc-tag nc-tag-cat">${e.tipo==='tarea'?'Tarea':e.tipo==='fecha'?'Fecha importante':'Proyecto'}</span></div>`).join('') : '<p class="nc-empty">Nada agendado este día.</p>'}
+          ${evs.length ? evs.map(e=>{
+            if(e.tipo==='tarea'){
+              return `<div class="nc-task-row" style="padding:6px 0;">
+                <button class="nc-checkbox ${e.hecho?'checked':''}" data-caltid="${e.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+                <span class="nc-task-text ${e.hecho?'done':''}" style="flex:1;">${escapeHtml(e.texto)}</span>
+                <span class="nc-tag nc-tag-cat">Tarea</span>
+              </div>`;
+            }
+            return `<div class="nc-mini-row"><span>${escapeHtml(e.texto)}</span><span class="nc-tag nc-tag-cat">${e.tipo==='fecha'?'Fecha importante':'Proyecto'}</span></div>`;
+          }).join('') : '<p class="nc-empty">Nada agendado este día.</p>'}
         </div>
       `;
     }
@@ -775,6 +877,7 @@
       </div>
       <div class="nc-legend">
         <span><i style="background:#8B6FB3"></i> Tareas pendientes</span>
+        <span><i style="background:#7C9B6F"></i> Tareas cumplidas</span>
         <span><i style="background:#D98B96"></i> Fechas importantes</span>
         <span><i style="background:#D9A544"></i> Proyectos</span>
       </div>
@@ -793,6 +896,14 @@
       const day = el.getAttribute('data-day');
       calState.selected = calState.selected===day ? null : day;
       renderCalendario();
+    }));
+    panel.querySelectorAll('[data-caltid]').forEach(btn=>btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = btn.getAttribute('data-caltid');
+      const t = tareas.find(x=>x.id===id);
+      if(t) t.hecho = !t.hecho;
+      renderCalendario(); renderTareas(); renderResumen();
+      saveKey('tareas-list', tareas);
     }));
   }
 
@@ -894,7 +1005,7 @@
     });
 
     html += `
-      <div class="nc-add-row">
+      <div class="nc-add-row" data-quickadd-target="lista">
         <input class="nc-add-input" id="nc-new-item" placeholder="Agregar otra cosa a la lista..." />
         <select class="nc-add-select" id="nc-new-item-cat">${checklistCats.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
         <button class="nc-add-btn" id="nc-add-item-btn">Agregar</button>
@@ -995,10 +1106,38 @@
     const totalFiltrado = list.reduce((s,g)=>s+Number(g.monto||0),0);
 
     const catTotals = {}; gastos.forEach(g=>{ catTotals[g.categoria||'Otro']=(catTotals[g.categoria||'Otro']||0)+Number(g.monto||0); });
-    const personaTotals = {Exequiel:0, Maru:0}; gastos.forEach(g=>{ const c=getContribution(g); personaTotals.Exequiel+=c.ex; personaTotals.Maru+=c.mr; });
+    const gastoListaTotal = Object.values(purchases).reduce((s,p)=>s+Number(p.monto||0),0);
+    if(gastoListaTotal) catTotals['Equipamiento del hogar'] = (catTotals['Equipamiento del hogar']||0) + gastoListaTotal;
+
+    const personaTotals = {Exequiel:0, Maru:0};
+    gastos.forEach(g=>{ const c=getContribution(g); personaTotals.Exequiel+=c.ex; personaTotals.Maru+=c.mr; });
+    Object.values(purchases).forEach(p=>{ const c=getContribution({monto:p.monto, quien:p.quien, splitExequiel:p.splitEx}); personaTotals.Exequiel+=c.ex; personaTotals.Maru+=c.mr; });
 
     let html = renderBgPicker('finanzas');
-    html += renderBalanceHtml(gastos.concat(purchasesAsGastos()));
+    const gastosCombinados = gastos.concat(purchasesAsGastos());
+    html += renderBalanceHtml(gastosCombinados);
+    html += renderBalancePorMetodo(gastosCombinados);
+
+    html += `
+      <div class="nc-settle-box">
+        <p class="nc-form-title">🤝 Saldar cuentas</p>
+        <p class="nc-card-note">Cuando uno le paga al otro en mano o por transferencia para quedar a la par, registralo acá — ajusta el balance sin tener que editar cada gasto.</p>
+        ${ajustesSaldo.length ? ajustesSaldo.slice().reverse().map(a=>`
+          <div class="nc-settle-row">
+            <span>${escapeHtml(a.de)} → ${escapeHtml(a.para)} · ${fmtDate(a.fecha)}${a.nota?' · '+escapeHtml(a.nota):''}</span>
+            <span>${money(a.monto)} <button class="nc-expense-del" data-delajuste="${a.id}">×</button></span>
+          </div>
+        `).join('') : ''}
+        <div class="nc-form-grid" style="margin-top:10px;">
+          <select id="naj-de">${PERSONAS.filter(p=>p!=='Ambos').map(p=>`<option value="${p}">${p}</option>`).join('')}</select>
+          <select id="naj-para">${PERSONAS.filter(p=>p!=='Ambos').slice().reverse().map(p=>`<option value="${p}">${p}</option>`).join('')}</select>
+          <input id="naj-monto" type="text" inputmode="decimal" placeholder="Monto $">
+          <input id="naj-fecha" type="date" value="${todayIso()}">
+          <textarea class="nc-full" id="naj-nota" placeholder="Nota (opcional)"></textarea>
+        </div>
+        <button class="nc-add-btn" id="naj-add-btn">Registrar pago</button>
+      </div>
+    `;
 
     const pendientesRec = getRecurrentesPendientes();
     if(pendientesRec.length){
@@ -1020,6 +1159,7 @@
       <div class="nc-chart-grid">
         <div class="nc-chart-card"><p class="nc-chart-title">Por categoría</p><div class="nc-chart-box"><canvas id="chart-gastos-cat"></canvas></div></div>
         <div class="nc-chart-card"><p class="nc-chart-title">Por persona (aporte real)</p><div class="nc-chart-box"><canvas id="chart-gastos-persona"></canvas></div></div>
+        <div class="nc-chart-card" style="grid-column:1/-1;"><p class="nc-chart-title">Evolución mensual</p><div class="nc-chart-box wide"><canvas id="chart-gastos-mensual"></canvas></div></div>
       </div>
       ${renderCatManager(gastoCats)}
       <div class="nc-filters">
@@ -1059,19 +1199,21 @@
     });
 
     const editing = gastos.find(g=>g.id===editingGastoId);
+    const linkingTask = !editing ? tareas.find(t=>t.id===linkingTaskId) : null;
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="finanzas">
         <p class="nc-form-title">${editing ? 'Editar gasto' : 'Registrar un gasto'}</p>
+        ${linkingTask ? `<p class="nc-card-note">Vinculando con la tarea "${escapeHtml(linkingTask.texto)}" — al guardar, la tarea queda marcada como hecha. <button class="nc-cancel-link" id="ng-unlink-btn" type="button">Cancelar vínculo</button></p>` : ''}
         <div class="nc-form-grid">
-          <input class="nc-full" id="ng-desc" placeholder="Descripción (ej: supermercado, factura de luz)" value="${editing?escapeHtml(editing.descripcion):''}">
+          <input class="nc-full" id="ng-desc" placeholder="Descripción (ej: supermercado, factura de luz)" value="${editing?escapeHtml(editing.descripcion):(linkingTask?escapeHtml(linkingTask.texto):'')}">
           <input id="ng-monto" type="text" inputmode="decimal" placeholder="Monto $ (acepta coma o punto)" value="${editing&&editing.monto!=null?editing.monto:''}">
           <input id="ng-fecha" type="date" value="${editing&&editing.fecha?editing.fecha:todayIso()}">
           <select id="ng-cat">${gastoCats.map(c=>`<option value="${c}" ${editing&&editing.categoria===c?'selected':''}>${c}</option>`).join('')}</select>
-          <select id="ng-quien">${PERSONAS.map(p=>`<option value="${p}" ${editing?(editing.quien===p?'selected':''):(p===PERSONAS[0]?'selected':'')}>${p}</option>`).join('')}</select>
+          <select id="ng-quien">${PERSONAS.map(p=>`<option value="${p}" ${editing?(editing.quien===p?'selected':''):(p==='Ambos'?'selected':'')}>${p}</option>`).join('')}</select>
           <select id="ng-metodo">${METODOS.map(m=>`<option value="${m}" ${editing&&editing.metodo===m?'selected':''}>${m}</option>`).join('')}</select>
           <input id="ng-cuotas" type="number" placeholder="Cuotas (si es crédito)" value="${editing&&editing.cuotas?editing.cuotas:''}">
           <select id="ng-discutido"><option value="si" ${!editing||editing.discutido==='si'?'selected':''}>Discutido en pareja</option><option value="no" ${editing&&editing.discutido==='no'?'selected':''}>Decisión unilateral</option></select>
-          <div class="nc-full" id="ng-split-wrap" style="display:${editing&&editing.quien==='Ambos'?'block':'none'};">
+          <div class="nc-full" id="ng-split-wrap" style="display:${(editing?editing.quien==='Ambos':true)?'block':'none'};">
             <input id="ng-split" type="text" inputmode="decimal" placeholder="¿Cuánto puso Exequiel? (el resto es de Maru)" value="${editing&&editing.splitExequiel!=null?editing.splitExequiel:''}">
           </div>
           <textarea class="nc-full" id="ng-nota" placeholder="Nota (opcional)">${editing?escapeHtml(editing.nota||''):''}</textarea>
@@ -1109,6 +1251,16 @@
         data:{ labels:['Exequiel','Maru'], datasets:[{ data:[personaTotals.Exequiel, personaTotals.Maru], backgroundColor:['#8B6FB3','#D9A544'], borderRadius:6 }] },
         options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ ticks:{ font:{size:10} } }, x:{ ticks:{ font:{size:10} } } } }
       });
+      destroyChart('chart-gastos-mensual');
+      const mesesTotals = {};
+      gastosCombinados.forEach(g=>{ if(!g.fecha) return; const ym = g.fecha.slice(0,7); mesesTotals[ym] = (mesesTotals[ym]||0) + Number(g.monto||0); });
+      const mesesKeys = Object.keys(mesesTotals).sort();
+      const mesesLabels = mesesKeys.map(ym=>{ const [y,m] = ym.split('-'); return MESES[parseInt(m,10)-1].slice(0,3)+' '+y.slice(2); });
+      chartRefs['chart-gastos-mensual'] = new Chart(document.getElementById('chart-gastos-mensual'), {
+        type:'line',
+        data:{ labels: mesesKeys.length?mesesLabels:['Sin datos'], datasets:[{ label:'Total gastado', data: mesesKeys.length?mesesKeys.map(k=>mesesTotals[k]):[0], borderColor:'#8B6FB3', backgroundColor:'rgba(139,111,179,.15)', fill:true, tension:.3 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ ticks:{ font:{size:10} } }, x:{ ticks:{ font:{size:10} } } } }
+      });
     }
 
     bindCatManager(panel,
@@ -1133,6 +1285,27 @@
         saveKey('finanzas-cats', gastoCats);
       }
     );
+
+    panel.querySelectorAll('[data-delajuste]').forEach(btn=>btn.addEventListener('click', ()=>{
+      if(!confirm('¿Eliminar este pago registrado entre ustedes?')) return;
+      ajustesSaldo = ajustesSaldo.filter(a=>a.id!==btn.getAttribute('data-delajuste'));
+      renderFinanzas(); renderResumen();
+      saveKey('finanzas-ajustes', ajustesSaldo);
+    }));
+    document.getElementById('naj-add-btn').addEventListener('click', ()=>{
+      const de = document.getElementById('naj-de').value;
+      const para = document.getElementById('naj-para').value;
+      const monto = parseMonto(document.getElementById('naj-monto').value);
+      if(!monto){ showStatus('Falta el monto'); return; }
+      if(de===para){ showStatus('Quién paga y quién recibe no pueden ser la misma persona'); return; }
+      ajustesSaldo.push({
+        id:genId(), de, para, monto,
+        fecha:document.getElementById('naj-fecha').value || todayIso(),
+        nota:document.getElementById('naj-nota').value.trim()
+      });
+      renderFinanzas(); renderResumen();
+      saveKey('finanzas-ajustes', ajustesSaldo);
+    });
 
     ['ff-cat','ff-persona','ff-metodo','ff-discutido'].forEach(id=>{
       document.getElementById(id).addEventListener('change', (e)=>{
@@ -1160,6 +1333,8 @@
     }));
     const cancelBtn = document.getElementById('ng-cancel-btn');
     if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingGastoId=null; renderFinanzas(); });
+    const unlinkBtn = document.getElementById('ng-unlink-btn');
+    if(unlinkBtn) unlinkBtn.addEventListener('click', ()=>{ linkingTaskId=null; renderFinanzas(); });
 
     panel.querySelectorAll('[data-recconfirm]').forEach(btn=>btn.addEventListener('click', ()=>{
       const id = btn.getAttribute('data-recconfirm');
@@ -1220,9 +1395,16 @@
         }
         editingGastoId = null;
       } else {
-        gastos.push(Object.assign({id:genId(), historial:[{ts:Date.now(), quien:getWhoAmI()||'—', accion:'Creado'}]}, data));
+        const newId = genId();
+        gastos.push(Object.assign({id:newId, historial:[{ts:Date.now(), quien:getWhoAmI()||'—', accion:'Creado'}]}, data));
+        if(linkingTaskId){
+          const t = tareas.find(x=>x.id===linkingTaskId);
+          if(t){ t.gastoId = newId; t.hecho = true; }
+          saveKey('tareas-list', tareas);
+          linkingTaskId = null;
+        }
       }
-      renderFinanzas(); renderResumen(); saveKey('finanzas-gastos', gastos);
+      renderFinanzas(); renderResumen(); renderTareas(); saveKey('finanzas-gastos', gastos);
     });
   }
   // ---------------- PROYECTOS JUNTOS ----------------
@@ -1287,7 +1469,7 @@
     });
 
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="proyectos">
         <p class="nc-form-title">Nuevo proyecto juntos</p>
         <div class="nc-form-grid">
           <input class="nc-full" id="np-titulo" placeholder="Ej: viaje a Cafayate, ahorrar para el auto, decorar el living">
@@ -1389,6 +1571,7 @@
 
     if(!list.length) html += `<p class="nc-empty">No hay tareas en este filtro.</p>`;
     list.forEach(t=>{
+      const gastoVinculado = t.gastoId ? gastos.find(g=>g.id===t.gastoId) : null;
       html += `
         <div class="nc-task-row">
           <button class="nc-checkbox ${t.hecho?'checked':''}" data-tid="${t.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
@@ -1398,9 +1581,11 @@
               <span class="nc-tag ${personaTagClass(t.asignado)}">${escapeHtml(t.asignado)}</span>
               <span class="nc-tag nc-tag-cat">${escapeHtml(t.frecuencia)}</span>
               ${t.fecha ? `<span class="nc-tag nc-tag-cat">${fmtDate(t.fecha)}</span>` : ''}
+              ${gastoVinculado ? `<span class="nc-tag nc-tag-discutido">💰 ${money(gastoVinculado.monto)}</span>` : ''}
             </div>
           </div>
           <span class="nc-row-actions">
+            ${!gastoVinculado ? `<button class="nc-edit-btn" data-linktask="${t.id}" title="Vincular a un gasto">💰</button>` : ''}
             <button class="nc-edit-btn" data-editt="${t.id}">✎</button>
             <button class="nc-item-del" data-deltask="${t.id}">×</button>
           </span>
@@ -1410,7 +1595,7 @@
 
     const editingT = tareas.find(t=>t.id===editingTaskId);
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="tareas">
         <p class="nc-form-title">${editingT ? 'Editar tarea' : 'Agregar tarea'}</p>
         <div class="nc-form-grid">
           <input class="nc-full" id="nt-texto" placeholder="Ej: lavar los platos, pagar el alquiler, hacer las compras" value="${editingT?escapeHtml(editingT.texto):''}">
@@ -1442,6 +1627,10 @@
     }));
     panel.querySelectorAll('[data-editt]').forEach(btn=>btn.addEventListener('click', ()=>{
       editingTaskId = btn.getAttribute('data-editt'); renderTareas();
+    }));
+    panel.querySelectorAll('[data-linktask]').forEach(btn=>btn.addEventListener('click', ()=>{
+      linkingTaskId = btn.getAttribute('data-linktask');
+      activateTab('finanzas');
     }));
     panel.querySelectorAll('[data-deltask]').forEach(btn=>btn.addEventListener('click', ()=>{
       if(!confirm('¿Eliminar esta tarea?')) return;
@@ -1499,7 +1688,7 @@
 
     const editingR = recordatorios.find(r=>r.id===editingRemId);
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="fechas">
         <p class="nc-form-title">${editingR ? 'Editar fecha importante' : 'Agregar fecha importante'}</p>
         <div class="nc-form-grid">
           <input class="nc-full" id="nr-texto" placeholder="Ej: turno con el dentista, vencimiento del alquiler, cumpleaños de mamá" value="${editingR?escapeHtml(editingR.texto):''}">
@@ -1574,7 +1763,7 @@
     html += `</div>`;
 
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="recuerdos">
         <p class="nc-form-title">Agregar un recuerdo</p>
         <div class="nc-form-grid">
           <input class="nc-full" id="nm-caption" placeholder="Ej: primera noche en la casa nueva">
@@ -1640,7 +1829,7 @@
       `;
     });
     html += `
-      <div class="nc-form-box">
+      <div class="nc-form-box" data-quickadd-target="normas">
         <p class="nc-form-title">Agregar norma</p>
         <select id="nn-cat">${NORM_CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
         <textarea id="nn-text" placeholder="Escriban una nueva norma..."></textarea>
@@ -1680,6 +1869,8 @@
     if(panelEl) panelEl.classList.add('active');
     const homeBtn = document.getElementById('nc-home-btn');
     if(homeBtn) homeBtn.style.display = which==='resumen' ? 'none' : 'flex';
+    const quickBtn = document.getElementById('nc-quickadd-btn');
+    if(quickBtn) quickBtn.style.display = which==='resumen' ? 'none' : 'flex';
     window.scrollTo({top:0, behavior:'smooth'});
   }
   root.querySelectorAll('.nc-tab').forEach(tab=>{
@@ -1687,6 +1878,16 @@
   });
   const homeBtnEl = document.getElementById('nc-home-btn');
   if(homeBtnEl) homeBtnEl.addEventListener('click', ()=>{ activateTab('resumen'); });
+  const quickAddBtnEl = document.getElementById('nc-quickadd-btn');
+  if(quickAddBtnEl) quickAddBtnEl.addEventListener('click', ()=>{
+    const activePanel = root.querySelector('.nc-panel.active');
+    if(!activePanel) return;
+    const target = activePanel.querySelector('[data-quickadd-target]');
+    if(!target) return;
+    target.scrollIntoView({behavior:'smooth', block:'center'});
+    const firstField = target.querySelector('input, textarea, select');
+    if(firstField) setTimeout(()=>firstField.focus(), 350);
+  });
 
   function applyTheme(){
     const t = localStorage.getItem('nc-theme') || 'light';
@@ -1723,13 +1924,53 @@
     setTimeout(()=>{ refreshBtn.textContent = original; refreshBtn.disabled = false; }, 1400);
   });
 
+  const ANIVERSARIO = new Date(2017, 8, 18, 0, 0, 0); // 18-09-2017
+  function renderLoveCounter(){
+    const el = document.getElementById('nc-love-counter');
+    if(!el) return;
+    const now = new Date();
+    if(now < ANIVERSARIO){ el.style.display='none'; return; }
+
+    let years = now.getFullYear() - ANIVERSARIO.getFullYear();
+    let months = now.getMonth() - ANIVERSARIO.getMonth();
+    let days = now.getDate() - ANIVERSARIO.getDate();
+    let hours = now.getHours() - ANIVERSARIO.getHours();
+    let minutes = now.getMinutes() - ANIVERSARIO.getMinutes();
+    let seconds = now.getSeconds() - ANIVERSARIO.getSeconds();
+
+    if(seconds < 0){ seconds += 60; minutes--; }
+    if(minutes < 0){ minutes += 60; hours--; }
+    if(hours < 0){ hours += 24; days--; }
+    if(days < 0){
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+      months--;
+    }
+    if(months < 0){ months += 12; years--; }
+
+    el.innerHTML = `
+      <p class="nc-love-label">💗 Juntos desde el 18/09/2017</p>
+      <div class="nc-love-grid">
+        <div class="nc-love-unit"><span class="nc-love-num">${years}</span><span class="nc-love-word">Años</span></div>
+        <div class="nc-love-unit"><span class="nc-love-num">${months}</span><span class="nc-love-word">Meses</span></div>
+        <div class="nc-love-unit"><span class="nc-love-num">${days}</span><span class="nc-love-word">Días</span></div>
+        <div class="nc-love-unit"><span class="nc-love-num">${hours}</span><span class="nc-love-word">Horas</span></div>
+        <div class="nc-love-unit"><span class="nc-love-num">${minutes}</span><span class="nc-love-word">Minutos</span></div>
+        <div class="nc-love-unit"><span class="nc-love-num">${seconds}</span><span class="nc-love-word">Segundos</span></div>
+      </div>
+      <p class="nc-love-sub">y contando... 💗</p>
+    `;
+  }
+  renderLoveCounter();
+  setInterval(renderLoveCounter, 1000);
+
   loadAll();
 })();
 </script>
 
 <script>
 (function(){
-  const BACKUP_KEYS = ['checklist-state','checklist-custom','checklist-cats','checklist-purchases','finanzas-gastos','finanzas-cats','gastos-recurrentes','tareas-list','recordatorios-list','proyectos-list','convivencia-normas','recuerdos-list','fondos-tabs'];
+  const BACKUP_KEYS = ['checklist-state','checklist-custom','checklist-cats','checklist-purchases','finanzas-gastos','finanzas-cats','gastos-recurrentes','finanzas-ajustes','tareas-list','recordatorios-list','proyectos-list','convivencia-normas','recuerdos-list','fondos-tabs'];
 
   const btn = document.getElementById('nc-backup-btn');
   if(btn){
