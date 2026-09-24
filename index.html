@@ -144,6 +144,7 @@
   .nc-add-btn:hover{background:var(--lilac);color:var(--white);}
 
   .nc-balance-card{background:var(--rose-dim);border:1px solid var(--rose);border-radius:14px;padding:14px 16px;margin-bottom:18px;}
+  .nc-balance-card.nc-balance-pending{background:var(--gold-dim);border:1px dashed var(--gold);}
   .nc-balance-title{font-size:12px;font-weight:600;color:#8A4A52;text-transform:uppercase;letter-spacing:.03em;margin:0 0 4px;}
   .nc-balance-text{font-size:15px;margin:0;}
   .nc-filters{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;box-shadow:var(--shadow);}
@@ -801,7 +802,8 @@
         <div class="nc-card clickable" data-goto="tareas"><p class="nc-card-label">Tareas pendientes</p><p class="nc-card-value">${pendTareas}</p><p class="nc-card-note">de ${tareas.length} en total</p></div>
         <div class="nc-card clickable" data-goto="proyectos"><p class="nc-card-label">Proyectos en curso</p><p class="nc-card-value">${proyectosActivos}</p><p class="nc-card-note">de ${proyectos.length} proyectos juntos</p></div>
       </div>
-      ${renderBalanceHtml(gastos.concat(purchasesAsGastos()))}
+      ${renderBalanceHtml(gastos.concat(purchasesAsGastos()).filter(esLiquido), {titulo:'Balance líquido', emptyText:'Todavía no hay gastos en efectivo/transferencia registrados.'})}
+      ${(()=>{ const pend = gastos.concat(purchasesAsGastos()).filter(g=>!esLiquido(g)); return pend.length ? renderBalanceHtml(pend, {titulo:'💳 Pendiente en tarjeta', pending:true}) : ''; })()}
       <div class="nc-chart-grid">
         <div class="nc-chart-card"><p class="nc-chart-title">Reparto de tareas</p><div class="nc-chart-box"><canvas id="chart-tareas-eq"></canvas></div></div>
         <div class="nc-chart-card"><p class="nc-chart-title">Gastos por categoría</p><div class="nc-chart-box"><canvas id="chart-gastos-cat-resumen"></canvas></div></div>
@@ -838,7 +840,8 @@
     }
   }
 
-  function purchasesAsGastos(){ return Object.entries(purchases).map(([id,p])=>({ monto:p.monto, quien:p.quien, splitExequiel:p.splitEx })); }
+  function purchasesAsGastos(){ return Object.entries(purchases).map(([id,p])=>({ monto:p.monto, quien:p.quien, splitExequiel:p.splitEx, metodo:p.metodo, pagado:true })); }
+  function esLiquido(g){ return g.metodo !== 'Crédito' || !!g.pagado; }
 
   function getSettlementAdjustment(){
     // Positive = reduces how much Maru owes Exequiel (or increases how much Exequiel owes Maru)
@@ -850,20 +853,23 @@
     });
     return adj;
   }
-  function renderBalanceHtml(list){
+  function renderBalanceHtml(list, opts){
+    opts = opts || {};
+    const titulo = opts.titulo || 'Balance';
+    const cardClass = opts.pending ? 'nc-balance-card nc-balance-pending' : 'nc-balance-card';
     let ex=0, mr=0, total=0;
     list.forEach(g=>{ const c=getContribution(g); total+=c.ex+c.mr; ex+=c.ex; mr+=c.mr; });
-    if(total===0 && !ajustesSaldo.length) return `<div class="nc-balance-card"><p class="nc-balance-title">Balance</p><p class="nc-balance-text">Todavía no hay gastos registrados para calcular el balance.</p></div>`;
+    if(total===0 && (opts.pending || !ajustesSaldo.length)) return `<div class="${cardClass}"><p class="nc-balance-title">${titulo}</p><p class="nc-balance-text">${opts.emptyText || 'Todavía no hay gastos registrados para calcular el balance.'}</p></div>`;
     const half = total/2;
     const rawDiff = ex - half;
-    const settlementAdj = getSettlementAdjustment();
+    const settlementAdj = opts.pending ? 0 : getSettlementAdjustment();
     const diff = rawDiff - settlementAdj;
     let text;
-    if(Math.abs(diff) < 1) text = 'Están a la par — cada uno puso lo que le corresponde.';
-    else if(diff > 0) text = `Maru le debe a Exequiel <strong>${money(diff)}</strong> para quedar a la par.`;
-    else text = `Exequiel le debe a Maru <strong>${money(Math.abs(diff))}</strong> para quedar a la par.`;
-    const ajusteNote = ajustesSaldo.length ? `<p class="nc-card-note">Ya se registraron ${money(Math.abs(settlementAdj))} en pagos entre ustedes para saldar cuentas.</p>` : '';
-    return `<div class="nc-balance-card"><p class="nc-balance-title">Balance</p><p class="nc-balance-text">${text}</p><p class="nc-card-note">Exequiel puso ${money(ex)} · Maru puso ${money(mr)} · Total gastado ${money(total)}</p>${ajusteNote}</div>`;
+    if(Math.abs(diff) < 1) text = opts.pending ? 'Están a la par en lo que está en la tarjeta.' : 'Están a la par — cada uno puso lo que le corresponde.';
+    else if(diff > 0) text = opts.pending ? `Cuando se cancele, Maru le va a deber a Exequiel <strong>${money(diff)}</strong>.` : `Maru le debe a Exequiel <strong>${money(diff)}</strong> para quedar a la par.`;
+    else text = opts.pending ? `Cuando se cancele, Exequiel le va a deber a Maru <strong>${money(Math.abs(diff))}</strong>.` : `Exequiel le debe a Maru <strong>${money(Math.abs(diff))}</strong> para quedar a la par.`;
+    const ajusteNote = (!opts.pending && ajustesSaldo.length) ? `<p class="nc-card-note">Ya se registraron ${money(Math.abs(settlementAdj))} en pagos entre ustedes para saldar cuentas.</p>` : '';
+    return `<div class="${cardClass}"><p class="nc-balance-title">${titulo}</p><p class="nc-balance-text">${text}</p><p class="nc-card-note">Exequiel puso ${money(ex)} · Maru puso ${money(mr)} · Total ${money(total)}</p>${ajusteNote}</div>`;
   }
   function renderBalancePorMetodo(list){
     const metodos = {};
@@ -1213,7 +1219,13 @@
 
     let html = renderBgPicker('finanzas');
     const gastosCombinados = gastos.concat(purchasesAsGastos());
-    html += renderBalanceHtml(gastosCombinados);
+    const liquidos = gastosCombinados.filter(esLiquido);
+    const creditosPendientes = gastosCombinados.filter(g=>!esLiquido(g));
+    html += renderBalanceHtml(liquidos, {titulo:'Balance líquido (efectivo/transferencia)', emptyText:'Todavía no hay gastos en efectivo/transferencia registrados.'});
+    if(creditosPendientes.length){
+      html += renderBalanceHtml(creditosPendientes, {titulo:'💳 Pendiente en tarjeta de crédito', pending:true});
+      html += `<p class="nc-card-note" style="margin:-10px 0 18px;">Estos gastos no se mezclan con el balance líquido hasta que marques la tarjeta como pagada en cada gasto.</p>`;
+    }
     html += renderBalancePorMetodo(gastosCombinados);
 
     const propActual = getProporcionSplit();
@@ -1296,6 +1308,7 @@
             <span class="nc-tag ${personaTagClass(g.quien)}">${escapeHtml(g.quien||'—')}</span>
             <span class="nc-tag nc-tag-cat">${escapeHtml(g.metodo||'—')}${g.metodo==='Crédito' && g.cuotas ? ' · '+g.cuotas+' cuotas' : ''}</span>
             <span class="nc-tag ${g.discutido==='no'?'nc-tag-unilateral':'nc-tag-discutido'}">${g.discutido==='no'?'Unilateral':'Discutido'}</span>
+            ${g.metodo==='Crédito' ? (g.pagado ? `<span class="nc-tag nc-tag-discutido">✅ Tarjeta pagada</span>` : `<button class="nc-edit-btn" data-pagarcredito="${g.id}">💳 Marcar tarjeta pagada</button>`) : ''}
           </div>
           ${showSplit ? `<p class="nc-split-note">Exequiel puso ${money(c.ex)} · Maru puso ${money(c.mr)}</p>` : ''}
           ${g.historial && g.historial.length ? `<details class="nc-historial"><summary>Historial (${g.historial.length})</summary>${g.historial.map(h=>`<div class="nc-mini-row"><span>${escapeHtml(h.accion)}${h.quien?' · '+escapeHtml(h.quien):''}</span><span>${new Date(h.ts).toLocaleString('es-AR')}</span></div>`).join('')}</details>` : ''}
@@ -1453,6 +1466,13 @@
       if(editingGastoId===id) editingGastoId=null;
       renderFinanzas(); renderResumen(); saveKey('finanzas-gastos', gastos);
     }));
+    panel.querySelectorAll('[data-pagarcredito]').forEach(btn=>btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-pagarcredito');
+      const g = gastos.find(x=>x.id===id);
+      if(g){ g.pagado = true; if(!g.historial) g.historial=[]; g.historial.push({ts:Date.now(), quien:getWhoAmI()||'—', accion:'Tarjeta marcada como pagada'}); }
+      renderFinanzas(); renderResumen(); saveKey('finanzas-gastos', gastos);
+      showStatus('Listo — ese gasto ya pasó a sumar al balance líquido');
+    }));
     const cancelBtn = document.getElementById('ng-cancel-btn');
     if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingGastoId=null; renderFinanzas(); });
     const unlinkBtn = document.getElementById('ng-unlink-btn');
@@ -1518,7 +1538,7 @@
         editingGastoId = null;
       } else {
         const newId = genId();
-        gastos.push(Object.assign({id:newId, historial:[{ts:Date.now(), quien:getWhoAmI()||'—', accion:'Creado'}]}, data));
+        gastos.push(Object.assign({id:newId, pagado: data.metodo!=='Crédito', historial:[{ts:Date.now(), quien:getWhoAmI()||'—', accion:'Creado'}]}, data));
         if(linkingTaskId){
           const t = tareas.find(x=>x.id===linkingTaskId);
           if(t){ t.gastoId = newId; t.hecho = true; }
